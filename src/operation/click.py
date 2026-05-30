@@ -2,7 +2,6 @@ import time
 
 import keyboard
 import mouse
-
 from song import *
 
 
@@ -15,6 +14,10 @@ def key_click(args, standard_keys):
         for key in args.key:
             if key in standard_keys:
                 keyboard.press_and_release(key)
+
+            if keyboard.is_pressed('f8'):
+                break
+
         time.sleep(args.time)
 
     else:
@@ -31,6 +34,10 @@ def mouse_click(args, standard_mouse):
         for key in args.mouse:
             if key in standard_mouse:
                 mouse.click(key)
+
+            if keyboard.is_pressed('f8'):
+                break
+
         time.sleep(args.time)
 
     else:

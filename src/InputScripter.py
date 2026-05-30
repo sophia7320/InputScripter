@@ -1,8 +1,8 @@
 import argparse
-from typing import *
 import os
+from typing import *
+
 from operation import *
-from trigger import *
 
 standard_keys: Final[list] = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -23,43 +23,101 @@ def main():
     os.makedirs('func', exist_ok=True)
 
     parser = argparse.ArgumentParser(
-        description='快速键入工具 v1.0.0\nBy FeSo4a\n使用MIT许可证',
+        description='快速键入工具 v2.0.0\nBy FeSo4a\n使用MIT许可证',
         epilog='''
         示例: InputScripter --key=a --key=b --key=c --time=0.5
              InputScripter --press=2 --press=3 --press=6
         宏写法：
         [
-          {"key":"触发按键","keys":["触发后模拟按下按键1","2","3"],"mouses":["触发后模拟按下鼠标1","2","3"]},
+          {
+            "trigger":"触发按键","options":[
+              操作
+            ]
+          },
           ...
         ]
+        操作写法：
+        {"key":"模拟按下的按键","time":时间（秒）}
+        或
+        {"mouse":"模拟按下的鼠标按键","time":时间（秒）}
         ''',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
-    parser.add_argument('--key', type=str, help='按下按键（支持多次传入） - 只能与time连用。', action='append')
-    parser.add_argument('--mouse', type=str, help='按下鼠标（支持多次传入） - 只能与time连用。', action='append')
-    parser.add_argument('--time', type=float, help='按下按键间隔（秒） - 只能与key或mouse连用')
-    parser.add_argument('--press', type=str, help='模拟持续按下按键（支持多次传入） - 与其他参数冲突', action='append')
-    parser.add_argument('--pmouse', type=str, help='模拟持续按下鼠标（支持多次传入） - 与其他参数冲突', action='append')
-    parser.add_argument('--view', help='查看可用按键（不需要传入数据） - 与其他参数冲突', action='store_true')
-    parser.add_argument('--func', type=str, help='读取宏（只能传入func文件夹里面的一个宏文件名称） - 与其他参数冲突')
-    parser.add_argument('--showfunc', help='查看可用宏文件（不需要传入数据） - 与其他参数冲突', action='store_true')
+    # 创建互斥组
+    group_click_key = parser.add_argument_group('按键点击模式（互斥）')
+    group_click_key.add_argument('--key', type=str, help='按下按键（支持多次传入）', action='append')
+    group_click_key.add_argument('--time', type=float, help='按下按键间隔（秒）')
+
+    group_click_mouse = parser.add_argument_group('鼠标点击模式（互斥）')
+    group_click_mouse.add_argument('--mouse', type=str, help='按下鼠标（支持多次传入）', action='append')
+
+    group_press_key = parser.add_argument_group('按键长按模式（互斥）')
+    group_press_key.add_argument('--press', type=str, help='模拟持续按下按键（支持多次传入）', action='append')
+
+    group_press_mouse = parser.add_argument_group('鼠标长按模式（互斥）')
+    group_press_mouse.add_argument('--pmouse', type=str, help='模拟持续按下鼠标（支持多次传入）', action='append')
+
+    group_view = parser.add_argument_group('查看模式（互斥）')
+    group_view.add_argument('--view', help='查看可用按键', action='store_true')
+
+    group_func = parser.add_argument_group('宏执行模式（互斥）')
+    group_func.add_argument('--func', type=str, help='读取宏（只能传入func文件夹里面的一个宏文件名称）')
+
+    group_showfunc = parser.add_argument_group('宏查看模式（互斥）')
+    group_showfunc.add_argument('--showfunc', help='查看可用宏文件', action='store_true')
 
     args = parser.parse_args()
 
-    if if_click_key(args):
+    # 验证互斥逻辑
+    active_modes = []
+
+    if args.key or args.time:
+        if not args.key or not args.time:
+            parser.error("按键点击模式需要同时指定 --key 和 --time")
+        active_modes.append('click_key')
+
+    if args.mouse:
+        if not args.time:
+            parser.error("鼠标点击模式需要同时指定 --mouse 和 --time")
+        if args.key:
+            parser.error("--key 和 --mouse 不能同时使用")
+        active_modes.append('click_mouse')
+
+    if args.press:
+        active_modes.append('press_key')
+    if args.pmouse:
+        active_modes.append('press_mouse')
+    if args.view:
+        active_modes.append('view')
+    if args.func:
+        active_modes.append('func')
+    if args.showfunc:
+        active_modes.append('showfunc')
+
+    # 检查是否只有一个模式被激活
+    if len(active_modes) > 1:
+        parser.error(f"参数冲突：检测到多个模式被激活 {', '.join(active_modes)}，这些模式是互斥的")
+    if len(active_modes) == 0:
+        parser.print_help()
+        exit(0)
+
+    # 执行对应的操作
+    mode = active_modes[0]
+
+    if mode == 'click_key':
         key_click(args, standard_keys)
-    elif if_press_key(args):
+    elif mode == 'press_key':
         key_press(args, standard_keys)
-    elif if_press_mouse(args):
-        mouse_press(args, standard_mouse)
-    elif if_click_mouse(args):
+    elif mode == 'click_mouse':
         mouse_click(args, standard_mouse)
-    elif if_view(args):
+    elif mode == 'press_mouse':
+        mouse_press(args, standard_mouse)
+    elif mode == 'view':
         print_view(standard_keys, standard_mouse)
-    elif if_func(args):
+    elif mode == 'func':
         run_func(load_func(args))
-    elif if_showfunc(args):
+    elif mode == 'showfunc':
         view_func()
 
 

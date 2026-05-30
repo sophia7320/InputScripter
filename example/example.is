@@ -1,0 +1,10 @@
+[
+  {
+    "trigger": "1",
+    "options": [
+      {"key": "2", "time": 1},
+      {"key": "w", "time": 0.1},
+      {"key": "e", "time": 0}
+    ]
+  }
+]

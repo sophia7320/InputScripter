@@ -6,14 +6,13 @@ from typing import *
 
 import keyboard
 import mouse
-
 from song import *
 
 
 def load_func(args) -> Optional[list]:
     # noinspection PyBroadException
     try:
-        with open(f'func/{args.func}', 'r', encoding='utf-8') as func:
+        with open(f'func/{args.func}.is', 'r', encoding='utf-8') as func:
             func = json.load(func)
             return func
 
@@ -28,8 +27,34 @@ def load_func(args) -> Optional[list]:
 
 def show_func(func) -> None:
     print('已加载宏：')
-    for key in func:
-        print(f'{key.get("key", "")} -> {key.get("keys")}{key.get("mouses", "")}')
+    for item in func:
+
+        # 显示每个触发键及其对应的操作
+        trigger = item.get('trigger', '')
+        options = item.get('options', [])
+
+        # 先打印触发键
+        print(f"按键 '{trigger}' ->")
+
+        # 再打印每个操作，缩进对齐
+        for opt in options:
+            if opt.get('key'):
+                print(f"\t按键 '{opt['key']}', 间隔 {opt.get('time', 0)}s")
+            elif opt.get('mouse'):
+                print(f"\t鼠标 '{opt['mouse']}', 间隔 {opt.get('time', 0)}s")
+
+
+def execute_option(option):
+    if option.get('key') and option.get('time') is not None:
+        key = option['key']
+        interval = option['time']
+        keyboard.press_and_release(key)
+        time.sleep(interval)
+    elif option.get('mouse') and option.get('time') is not None:
+        m = option['mouse']
+        interval = option['time']
+        mouse.click(m)
+        time.sleep(interval)
 
 
 def run_func(func) -> None:
@@ -41,19 +66,26 @@ def run_func(func) -> None:
     show_func(func)
 
     while not keyboard.is_pressed('F8'):
-        for key in func:
-            trigger_key = key.get('key', None)
-            if trigger_key and keyboard.is_pressed(trigger_key):
-                keys = key.get('keys', [])
-                mouses = key.get('mouses', [])
-                for k in keys:
-                    keyboard.press_and_release(k)
-                for m in mouses:
-                    mouse.click(m)
+        for item in func:
+            trigger_key = item.get('trigger', None)
+            options = item.get('options', [])
 
-                # 等待按键释放，避免重复触发
+            if trigger_key and keyboard.is_pressed(trigger_key):
+                for option in options:
+                    # 在执行每个选项时也检查 F8
+                    if keyboard.is_pressed('F8'):
+                        break
+                    execute_option(option)
+
+                # 等待触发键释放，避免重复触发（同时检查 F8）
                 while keyboard.is_pressed(trigger_key):
+                    if keyboard.is_pressed('F8'):
+                        break
                     time.sleep(0.05)
+
+                # 如果按下了 F8，立即退出
+                if keyboard.is_pressed('F8'):
+                    break
 
         time.sleep(0.01)  # 降低CPU占用
 
@@ -63,5 +95,8 @@ def run_func(func) -> None:
 
 
 def view_func():
+    beep_sound()
+    print('有以下宏文件：')
     for filename in os.listdir('func'):
-        print(filename)
+        if filename.endswith('.is'):
+            print(filename[:-3])

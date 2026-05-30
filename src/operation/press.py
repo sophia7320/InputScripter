@@ -2,7 +2,6 @@ import time
 
 import keyboard
 import mouse
-
 from song import *
 
 
@@ -22,6 +21,7 @@ def key_press(args, standard_keys):
         for key in args.press:
             if key in standard_keys:
                 keyboard.release(key)
+
         beep_sound()
         print('已停止。')
 
