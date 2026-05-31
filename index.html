@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InputScripter v2.0.1 - CLI自动化工具</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⌨️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #00ff00;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 扫描线效果 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 0, 0.03) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: scanline 10s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* 闪烁光标 */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: #00ff00;
+            vertical-align: middle;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px dashed #00ff00;
+            margin-bottom: 30px;
+        }
+
+        .version-badge {
+            background-color: #003300;
+            color: #00ff00;
+            padding: 5px 15px;
+            border-radius: 0;
+            border: 1px solid #00ff00;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        h1 {
+            color: #00ff00;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #00cc00;
+            font-size: 1.8rem;
+            margin: 25px 0 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #005500;
+        }
+
+        h3 {
+            color: #00aa00;
+            font-size: 1.4rem;
+            margin: 20px 0 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #88ff88;
+        }
+
+        a {
+            color: #00ffff;
+            text-decoration: none;
+            border-bottom: 1px dotted #00ffff;
+            transition: all 0.3s;
+        }
+
+        a:hover {
+            color: #ffffff;
+            background-color: #005500;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .link-btn {
+            background-color: #001100;
+            padding: 10px 20px;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .link-btn:hover {
+            background-color: #003300;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .code-block {
+            background-color: #001100;
+            border: 1px solid #005500;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            color: #aaffaa;
+        }
+
+        .code-block pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border: 1px solid #005500;
+        }
+
+        th, td {
+            border: 1px solid #005500;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #002200;
+            color: #00ff00;
+        }
+
+        tr:nth-child(even) {
+            background-color: #001100;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background-color: #001100;
+            border: 1px solid #005500;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+
+        .warning {
+            background-color: #330000;
+            border-left: 4px solid #ff0000;
+            padding: 15px;
+            margin: 20px 0;
+            color: #ff8888;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed #005500;
+            color: #008800;
+            font-size: 0.9rem;
+        }
+
+        .terminal-line {
+            margin-bottom: 10px;
+        }
+
+        .prompt {
+            color: #00ff00;
+        }
+
+        .command {
+            color: #ffffff;
+        }
+
+        .comment {
+            color: #008800;
+            font-style: italic;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.4rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>&gt; InputScripter.exe<span class="cursor"></span></h1>
+            <div class="version-badge">v2.0.1</div>
+            <p>基于Python的键盘和鼠标自动化CLI工具</p>
+            
+            <div class="links">
+                <a href="https://github.com/FeSo4a/InputScripter/" target="_blank" class="link-btn">
+                    GitHub仓库
+                </a>
+                <a href="https://space.bilibili.com/3546674548967510?spm_id_from=333.337.0.0" target="_blank" class="link-btn">
+                    Bilibili主页
+                </a>
+            </div>
+        </div>
+
+        <div class="terminal-line">
+            <span class="prompt">C:\&gt;</span>
+            <span class="command">type README.md</span>
+        </div>
+
+        <h2>&gt; 功能特性</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>⌨️ 按键连点</h3>
+                <p>以指定间隔连续按下键盘按键</p>
+            </div>
+            <div class="feature-card">
+                <h3>🖱️ 鼠标连点</h3>
+                <p>以指定间隔连续点击鼠标按键</p>
+            </div>
+            <div class="feature-card">
+                <h3>⏬ 按键长按</h3>
+                <p>模拟持续按住键盘按键</p>
+            </div>
+            <div class="feature-card">
+                <h3>📜 宏命令系统</h3>
+                <p>自定义触发按键和模拟操作的宏</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔊 声音提示</h3>
+                <p>操作开始和结束时提供蜂鸣提示</p>
+            </div>
+            <div class="feature-card">
+                <h3>👁️ 查看所有可用按键</h3>
+                <p>列出支持的键盘和鼠标按键</p>
+            </div>
+        </div>
+
+        <h2>&gt; 系统要求</h2>
+        <div class="code-block">
+            <pre>
+操作系统: Windows (主要支持)
+Python版本: Python 3.6+
+依赖库:
+  - keyboard
+  - mouse
+            </pre>
+        </div>
+
+        <h2>&gt; 命令行参数</h2>
+        <table>
+            <tr>
+                <th>参数</th>
+                <th>说明</th>
+                <th>兼容性</th>
+            </tr>
+            <tr>
+                <td><code>--key</code></td>
+                <td>按下键盘按键（可多次使用）</td>
+                <td>只能与<code>--time</code>连用</td>
+            </tr>
+            <tr>
+                <td><code>--mouse</code></td>
+                <td>点击鼠标按键（可多次使用）</td>
+                <td>只能与<code>--time</code>连用</td>
+            </tr>
+            <tr>
+                <td><code>--time</code></td>
+                <td>按键/鼠标点击间隔（秒）</td>
+                <td>只能与<code>--key</code>或<code>--mouse</code>连用</td>
+            </tr>
+            <tr>
+                <td><code>--press</code></td>
+                <td>持续按住键盘按键（可多次使用）</td>
+                <td>与其他参数冲突</td>
+            </tr>
+            <tr>
+                <td><code>--pmouse</code></td>
+                <td>持续按住鼠标按键（可多次使用）</td>
+                <td>与其他参数冲突</td>
+            </tr>
+            <tr>
+                <td><code>--view</code></td>
+                <td>查看可用按键列表</td>
+                <td>与其他参数冲突</td>
+            </tr>
+            <tr>
+                <td><code>--func</code></td>
+                <td>执行宏文件（func文件夹中的文件名）</td>
+                <td>与其他参数冲突</td>
+            </tr>
+            <tr>
+                <td><code>--showfunc</code></td>
+                <td>查看可用的宏文件列表</td>
+                <td>与其他参数冲突</td>
+            </tr>
+        </table>
+
+        <h2>&gt; 使用示例</h2>
+        
+        <h3>1. 按键连点</h3>
+        <div class="code-block">
+            <pre>
+<span class="comment"># 以0.5秒间隔连续按下a、b、c键</span>
+python InputScripter.py --key=a --key=b --key=c --time=0.5</pre>
+        </div>
+
+        <h3>2. 鼠标连点</h3>
+        <div class="code-block">
+            <pre>
+<span class="comment"># 以0.3秒间隔连续点击鼠标左键和右键</span>
+python InputScripter.py --mouse=left --mouse=right --time=0.3</pre>
+        </div>
+
+        <h3>3. 按键长按</h3>
+        <div class="code-block">
+            <pre>
+<span class="comment"># 持续按住按键2、3、6</span>
+python InputScripter.py --press=2 --press=3 --press=6</pre>
+        </div>
+
+        <h3>4. 执行宏命令</h3>
+        <div class="code-block">
+            <pre>
+<span class="comment"># 执行func文件夹中的macro.json宏文件</span>
+python InputScripter.py --func=macro</pre>
+        </div>
+
+        <h2>&gt; 宏命令示例</h2>
+        <div class="code-block">
+            <pre>
+[
+  {
+    "trigger": "F1",
+    "options": [
+      {"key": "1", "time": 0.1},
+      {"key": "2", "time": 0.2},
+      {"key": "3", "time": 0}
+    ]
+  },
+  {
+    "trigger": "F2",
+    "options": [
+      {"mouse": "left", "time": 0},
+      {"mouse": "right", "time": 0}
+    ]
+  }
+]</pre>
+        </div>
+
+        <h2>&gt; 项目结构</h2>
+        <div class="code-block">
+            <pre>
+InputScripter/ 
+├── src/ 
+│ ├── InputScripter.py # 主程序入口 
+│ ├── func/ # 宏文件存储目录（运行时自动创建） 
+│ ├── operation/ # 操作执行模块 
+│ │ ├── click.py # 连点操作（键盘/鼠标） 
+│ │ ├── press.py # 长按操作（键盘/鼠标） 
+│ │ ├── view.py # 查看按键列表 
+│ │ └── function.py # 宏命令执行 
+│ └── song/ # 音效模块 
+│ ├── beep.py # 蜂鸣提示音 
+└── README.md # 项目说明文档</pre>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 注意事项：</strong>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>某些功能可能需要以管理员权限运行</li>
+                <li>所有持续操作都可以通过长按<strong>F8</strong>键停止</li>
+                <li>操作启动后有2秒延迟，便于切换到目标窗口</li>
+                <li>宏文件必须放在<code>func</code>文件夹中</li>
+                <li>主要针对Windows系统设计，其他系统可能功能受限</li>
+                <li>此类自动化工具在某些游戏中可能被视为作弊行为</li>
+            </ul>
+        </div>
+
+        <h2>&gt; 许可证</h2>
+        <p>本项目采用 <strong>MIT许可证</strong>，可自由使用和修改。</p>
+
+        <div class="footer">
+            <p>InputScripter v2.0.1 | 最后更新: 2026-05-31</p>
+            <p>© 2026 FeSo4a | 保留所有权利</p>
+            <div class="terminal-line" style="margin-top: 20px;">
+                <span class="prompt">C:\&gt;</span>
+                <span class="command">exit</span>
+                <span class="cursor"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加终端打字机效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const cursor = document.querySelector('.cursor');
+            
+            // 随机闪烁增强效果
+            setInterval(() => {
+                cursor.style.opacity = Math.random() > 0.5 ? '1' : '0';
+            }, 500);
+            
+            // 添加随机噪点效果
+            const container = document.querySelector('.container');
+            setInterval(() => {
+                if (Math.random() > 0.95) {
+                    container.style.boxShadow = '0 0 25px rgba(0, 255, 0, 0.5)';
+                    setTimeout(() => {
+                        container.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.3)';
+                    }, 100);
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
