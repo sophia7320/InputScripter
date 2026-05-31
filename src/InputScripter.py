@@ -45,26 +45,24 @@ def main():
     )
 
     # 创建互斥组
-    group_click_key = parser.add_argument_group('按键点击模式（互斥）')
+    group_click_key = parser.add_argument_group('按键/鼠标点击模式')
     group_click_key.add_argument('--key', type=str, help='按下按键（支持多次传入）', action='append')
     group_click_key.add_argument('--time', type=float, help='按下按键间隔（秒）')
+    group_click_key.add_argument('--mouse', type=str, help='按下鼠标（支持多次传入）', action='append')
 
-    group_click_mouse = parser.add_argument_group('鼠标点击模式（互斥）')
-    group_click_mouse.add_argument('--mouse', type=str, help='按下鼠标（支持多次传入）', action='append')
-
-    group_press_key = parser.add_argument_group('按键长按模式（互斥）')
+    group_press_key = parser.add_argument_group('按键长按模式')
     group_press_key.add_argument('--press', type=str, help='模拟持续按下按键（支持多次传入）', action='append')
 
-    group_press_mouse = parser.add_argument_group('鼠标长按模式（互斥）')
+    group_press_mouse = parser.add_argument_group('鼠标长按模式')
     group_press_mouse.add_argument('--pmouse', type=str, help='模拟持续按下鼠标（支持多次传入）', action='append')
 
-    group_view = parser.add_argument_group('查看模式（互斥）')
+    group_view = parser.add_argument_group('查看模式')
     group_view.add_argument('--view', help='查看可用按键', action='store_true')
 
-    group_func = parser.add_argument_group('宏执行模式（互斥）')
+    group_func = parser.add_argument_group('宏执行模式')
     group_func.add_argument('--func', type=str, help='读取宏（只能传入func文件夹里面的一个宏文件名称）')
 
-    group_showfunc = parser.add_argument_group('宏查看模式（互斥）')
+    group_showfunc = parser.add_argument_group('宏查看模式')
     group_showfunc.add_argument('--showfunc', help='查看可用宏文件', action='store_true')
 
     args = parser.parse_args()
@@ -72,18 +70,10 @@ def main():
     # 验证互斥逻辑
     active_modes = []
 
-    if args.key or args.time:
-        if not args.key or not args.time:
-            parser.error("按键点击模式需要同时指定 --key 和 --time")
+    if args.key and args.time:
         active_modes.append('click_key')
-
-    if args.mouse:
-        if not args.time:
-            parser.error("鼠标点击模式需要同时指定 --mouse 和 --time")
-        if args.key:
-            parser.error("--key 和 --mouse 不能同时使用")
+    if args.mouse and args.time:
         active_modes.append('click_mouse')
-
     if args.press:
         active_modes.append('press_key')
     if args.pmouse:
