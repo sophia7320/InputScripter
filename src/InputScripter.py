@@ -3,6 +3,7 @@ import os
 from typing import *
 
 from operation import *
+from write_text import *
 
 standard_keys: Final[list] = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -12,7 +13,8 @@ standard_keys: Final[list] = [
     'enter', 'esc', 'tab', 'backspace', 'delete', 'space',
     'up', 'down', 'left', 'right',
     'ctrl', 'alt', 'shift', 'win',
-    'caps lock', 'num lock', 'scroll lock'
+    'caps lock', 'num lock', 'scroll lock',
+    '\'', ';', '.', ',', '/', '\\', '`'
 ]
 standard_mouse: Final[list] = [
     'left', 'right', 'middle'
@@ -23,7 +25,7 @@ def main():
     os.makedirs('func', exist_ok=True)
 
     parser = argparse.ArgumentParser(
-        description='快速键入工具 v2.0.0\nBy FeSo4a\n使用MIT许可证',
+        description='快速键入工具 v2.1.1\nBy FeSo4a\n使用MIT许可证',
         epilog='''
         示例: InputScripter --key=a --key=b --key=c --time=0.5
              InputScripter --press=2 --press=3 --press=6
@@ -40,6 +42,8 @@ def main():
         {"key":"模拟按下的按键","time":时间（秒）}
         或
         {"mouse":"模拟按下的鼠标按键","time":时间（秒）}
+        或
+        {"message":"想要键入的文本","time":时间（秒）}
         ''',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -49,6 +53,9 @@ def main():
     group_click_key.add_argument('--key', type=str, help='按下按键（支持多次传入）', action='append')
     group_click_key.add_argument('--time', type=float, help='按下按键间隔（秒）')
     group_click_key.add_argument('--mouse', type=str, help='按下鼠标（支持多次传入）', action='append')
+
+    group_send_message = parser.add_argument_group('文本输入模式')
+    group_send_message.add_argument('--message', type=str, help='输入文本（不支持多次传入）')
 
     group_press_key = parser.add_argument_group('按键长按模式')
     group_press_key.add_argument('--press', type=str, help='模拟持续按下按键（支持多次传入）', action='append')
@@ -84,6 +91,8 @@ def main():
         active_modes.append('func')
     if args.showfunc:
         active_modes.append('showfunc')
+    if args.message:
+        active_modes.append('send_message')
 
     # 检查是否只有一个模式被激活
     if len(active_modes) > 1:
@@ -109,6 +118,8 @@ def main():
         run_func(load_func(args))
     elif mode == 'showfunc':
         view_func()
+    elif mode == 'send_message':
+        auto_input_text(args.message)
 
 
 if __name__ == '__main__':

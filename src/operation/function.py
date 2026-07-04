@@ -1,12 +1,14 @@
 import json
-import os
-import time
-from json import JSONDecodeError
-from typing import *
-
 import keyboard
 import mouse
+import os
+import time
+import pyperclip
+import platform
+from json import JSONDecodeError
 from song import *
+from typing import *
+from write_text import *
 
 
 def load_func(args) -> Optional[list]:
@@ -42,6 +44,8 @@ def show_func(func) -> None:
                 print(f"\t按键 '{opt['key']}', 间隔 {opt.get('time', 0)}s")
             elif opt.get('mouse'):
                 print(f"\t鼠标 '{opt['mouse']}', 间隔 {opt.get('time', 0)}s")
+            elif opt.get('message'):
+                print(f"\t输入 '{opt['message']!r}', 间隔 {opt.get('time', 0)}s")
 
 
 def execute_option(option):
@@ -54,6 +58,18 @@ def execute_option(option):
         m = option['mouse']
         interval = option['time']
         mouse.click(m)
+        time.sleep(interval)
+    elif option.get('message') and option.get('time') is not None:
+        message = option['message']
+        interval = option['time']
+
+        pyperclip.copy(message)
+        system = platform.system()
+        if system == 'Darwin':  # macOS
+            keyboard.send('cmd+v')
+        else:  # Windows / Linux
+            keyboard.send('ctrl+v')
+
         time.sleep(interval)
 
 
