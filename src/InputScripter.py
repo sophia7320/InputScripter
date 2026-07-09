@@ -25,7 +25,7 @@ def main():
     os.makedirs('func', exist_ok=True)
 
     parser = argparse.ArgumentParser(
-        description='快速键入工具 v2.2.0\nBy FeSo4a\n使用MIT许可证',
+        description='快速键入工具 v2.2.1\nBy FeSo4a\n使用MIT许可证',
         epilog='''
         示例: InputScripter --key=a --key=b --key=c --time=0.5
              InputScripter --press=2 --press=3 --press=6
@@ -98,8 +98,7 @@ def main():
     if len(active_modes) > 1:
         parser.error(f"参数冲突：检测到多个模式被激活 {', '.join(active_modes)}，这些模式是互斥的")
     if len(active_modes) == 0:
-        parser.print_help()
-        exit(0)
+        parser.error(f'缺少传参，使用-h参数查看帮助信息。')
 
     # 执行对应的操作
     mode = active_modes[0]
