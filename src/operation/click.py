@@ -4,7 +4,7 @@ import time
 from song import *
 
 
-def key_click(args, standard_keys):
+def key_click(args):
     print('连点2s后开始，长按F8停止。')
     time.sleep(2)
     beep_sound()
@@ -13,8 +13,12 @@ def key_click(args, standard_keys):
     while running:
         # 执行一次按键序列
         for key in args.key:
-            if key in standard_keys:
-                keyboard.press_and_release(key)
+            try:
+                keyboard.send(key)
+            except Exception as e:
+                beep_sound()
+                print(f'Error: {e}')
+                return
 
             # 每按一次键都检查 F8
             if keyboard.is_pressed('f8'):
@@ -36,7 +40,7 @@ def key_click(args, standard_keys):
     print('已停止。')
 
 
-def mouse_click(args, standard_mouse):
+def mouse_click(args):
     print('连点2s后开始，长按F8停止。')
     time.sleep(2)
     beep_sound()
@@ -45,8 +49,12 @@ def mouse_click(args, standard_mouse):
     while running:
         # 执行一次鼠标点击序列
         for key in args.mouse:
-            if key in standard_mouse:
+            try:
                 mouse.click(key)
+            except Exception as e:
+                beep_sound()
+                print(f'Error: {e}')
+                return
 
             if keyboard.is_pressed('f8'):
                 running = False

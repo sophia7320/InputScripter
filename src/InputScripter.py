@@ -25,7 +25,7 @@ def main():
     os.makedirs('func', exist_ok=True)
 
     parser = argparse.ArgumentParser(
-        description='快速键入工具 v2.1.2\nBy FeSo4a\n使用MIT许可证',
+        description='快速键入工具 v2.2.0\nBy FeSo4a\n使用MIT许可证',
         epilog='''
         示例: InputScripter --key=a --key=b --key=c --time=0.5
              InputScripter --press=2 --press=3 --press=6
@@ -50,27 +50,27 @@ def main():
 
     # 创建互斥组
     group_click_key = parser.add_argument_group('按键/鼠标点击模式')
-    group_click_key.add_argument('--key', type=str, help='按下按键（支持多次传入）', action='append')
-    group_click_key.add_argument('--time', type=float, help='按下按键间隔（秒）')
-    group_click_key.add_argument('--mouse', type=str, help='按下鼠标（支持多次传入）', action='append')
+    group_click_key.add_argument('-k', '--key', type=str, help='按下按键（支持多次传入）', action='append')
+    group_click_key.add_argument('-t', '--time', type=float, help='按下按键间隔（秒）')
+    group_click_key.add_argument('-m', '--mouse', type=str, help='按下鼠标（支持多次传入）', action='append')
 
     group_send_message = parser.add_argument_group('文本输入模式')
-    group_send_message.add_argument('--message', type=str, help='输入文本（不支持多次传入）')
+    group_send_message.add_argument('-me', '--message', type=str, help='输入文本（不支持多次传入）')
 
     group_press_key = parser.add_argument_group('按键长按模式')
-    group_press_key.add_argument('--press', type=str, help='模拟持续按下按键（支持多次传入）', action='append')
+    group_press_key.add_argument('-p', '--press', type=str, help='模拟持续按下按键（支持多次传入）', action='append')
 
     group_press_mouse = parser.add_argument_group('鼠标长按模式')
-    group_press_mouse.add_argument('--pmouse', type=str, help='模拟持续按下鼠标（支持多次传入）', action='append')
+    group_press_mouse.add_argument('-pm', '--pmouse', type=str, help='模拟持续按下鼠标（支持多次传入）', action='append')
 
     group_view = parser.add_argument_group('查看模式')
-    group_view.add_argument('--view', help='查看可用按键', action='store_true')
+    group_view.add_argument('-v', '--view', help='查看可用按键', action='store_true')
 
     group_func = parser.add_argument_group('宏执行模式')
-    group_func.add_argument('--func', type=str, help='读取宏（只能传入func文件夹里面的一个宏文件名称）')
+    group_func.add_argument('-r', '--runfunc', type=str, help='读取宏（只能传入func文件夹里面的一个宏文件名称）')
 
     group_showfunc = parser.add_argument_group('宏查看模式')
-    group_showfunc.add_argument('--showfunc', help='查看可用宏文件', action='store_true')
+    group_showfunc.add_argument('-s', '--showfunc', help='查看可用宏文件', action='store_true')
 
     args = parser.parse_args()
 
@@ -87,7 +87,7 @@ def main():
         active_modes.append('press_mouse')
     if args.view:
         active_modes.append('view')
-    if args.func:
+    if args.runfunc:
         active_modes.append('func')
     if args.showfunc:
         active_modes.append('showfunc')
@@ -105,13 +105,13 @@ def main():
     mode = active_modes[0]
 
     if mode == 'click_key':
-        key_click(args, standard_keys)
+        key_click(args)
     elif mode == 'press_key':
-        key_press(args, standard_keys)
+        key_press(args)
     elif mode == 'click_mouse':
-        mouse_click(args, standard_mouse)
+        mouse_click(args)
     elif mode == 'press_mouse':
-        mouse_press(args, standard_mouse)
+        mouse_press(args)
     elif mode == 'view':
         print_view(standard_keys, standard_mouse)
     elif mode == 'func':

@@ -2,10 +2,9 @@ import json
 import keyboard
 import mouse
 import os
-import time
-import pyperclip
 import platform
-from json import JSONDecodeError
+import pyperclip
+import time
 from song import *
 from typing import *
 from write_text import *
@@ -14,17 +13,12 @@ from write_text import *
 def load_func(args) -> Optional[list]:
     # noinspection PyBroadException
     try:
-        with open(f'func/{args.func}.is', 'r', encoding='utf-8') as func:
+        with open(f'func/{args.runfunc}.is', 'r', encoding='utf-8') as func:
             func = json.load(func)
             return func
 
-    except FileNotFoundError:
-        print('文件不存在。')
-        return None
-
-    except JSONDecodeError:
-        print('文件格式错误。')
-        return None
+    except Exception as e:
+        print(f'Error: {e}')
 
 
 def show_func(func) -> None:
@@ -52,7 +46,7 @@ def execute_option(option):
     if option.get('key') and option.get('time') is not None:
         key = option['key']
         interval = option['time']
-        keyboard.press_and_release(key)
+        keyboard.send(key)
         time.sleep(interval)
     elif option.get('mouse') and option.get('time') is not None:
         m = option['mouse']
@@ -91,7 +85,12 @@ def run_func(func) -> None:
                     # 在执行每个选项时也检查 F8
                     if keyboard.is_pressed('F8'):
                         break
-                    execute_option(option)
+                    try:
+                        execute_option(option)
+                    except Exception as e:
+                        beep_sound()
+                        print(f'Error: {e}')
+                        return
 
                 # 等待触发键释放，避免重复触发（同时检查 F8）
                 while keyboard.is_pressed(trigger_key):
